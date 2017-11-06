@@ -1,14 +1,16 @@
 package notebook;
 
+import notebook.Database.DBHandler;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void maina(String[] args) {
 
         Scanner in = new Scanner(System.in);
-        DBHandler handler = new DBHandler();
+        DBHandler handler = DBHandler.getInstance();
         int command;
 
         while (true) {
@@ -52,11 +54,11 @@ public class Main {
                 case 3 : {
                     System.out.print("Введите телефон, который нужно удалить: ");
                     String phone = in.nextLine();
-                    handler.removeRow(phone);
+                    //handler.removeRow(phone);
                     break;
                 }
                 case 4 : return;
-                default : break;//TODO
+                default : break;
             }
 
         }
