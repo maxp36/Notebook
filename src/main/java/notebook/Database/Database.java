@@ -7,8 +7,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class Database {
-
+public abstract class Database {
     private final String URL; // = "jdbc:mysql://localhost:3306/notebook";
     private final String USER; // = "root";
     private final String PASSWORD; // = "root";
@@ -16,11 +15,11 @@ public class Database {
     private Driver driver;
 
     public Database(DatabaseType type,
-                    String ip,
-                    Integer port,
-                    String nameDB,
-                    String user,
-                    String password) {
+                            String ip,
+                            Integer port,
+                            String nameDB,
+                            String user,
+                            String password) {
 
         String tempType = "";
         switch (type) {

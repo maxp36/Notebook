@@ -6,31 +6,30 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-public class DBHandler {
+public abstract class DBHandler {
 
-    private Database database;
+    private final Database db;
 
     private Connection con;
     private Statement statement;
     private ResultSet rs;
 
-    private static DBHandler instance;
+    //private static DBHandler instance;
 
-    public static synchronized DBHandler getInstance() {
+    /*public static synchronized DBHandler getInstance(NotebookDatabase db) {
         if (instance == null) {
-            instance = new DBHandler();
+            instance = new DBHandler(db);
         }
         return instance;
-    }
+    }*/
 
-    private DBHandler() {
-        database = new Database(DatabaseType.MYSQL, "localhost", 3306,
-                                "notebook", "root", "root");
-        createTable();
+    //private DBHandler(NotebookDatabase db) {
+    public DBHandler(Database db) {
+        this.db = db;
     }
 
     private void connect() {
-        con = database.getConnection();
+        con = db.getConnection();
         try {
             if (con != null) statement = con.createStatement();
         } catch (SQLException ex) {
@@ -39,7 +38,6 @@ public class DBHandler {
     }
 
     private void disconnect() {
-
         try {
             if (rs != null) rs.close();
         } catch (SQLException ex) {
@@ -84,54 +82,30 @@ public class DBHandler {
     }
 
 
-    private void createTable() {
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS PHONE ("
-                + "ID INT NOT NULL AUTO_INCREMENT, "
-                + "PHONE VARCHAR(12) NOT NULL, "
-                + "NAME VARCHAR(20) NOT NULL, "
-                + "EMAIL VARCHAR(20) NOT NULL, "
-                + "NOTE VARCHAR(100) NOT NULL, "
-                + "PRIMARY KEY (ID), "
-                + "UNIQUE (PHONE) "
-                + ");";
-        execute(createTableSQL);
+    protected void createTable(String query) {
+        execute(query);
         disconnect();
     }
 
-    public void insertRow(String phone, String name, String email, String note) {
-        String insertTableSQL = "INSERT INTO PHONE "
-                + "(PHONE, NAME, EMAIL, NOTE) "
-                + "VALUES ("
-                + "'" + phone + "', "
-                + "'" + name + "', "
-                + "'" + email + "', "
-                + "'" + note + "'"
-                + ");";
-        execute(insertTableSQL);
+    protected void insertRow(String query) {
+        execute(query);
         disconnect();
     }
 
-    public ArrayList<ArrayList<String>> selectAll() {
+    protected ArrayList<ArrayList<String>> selectAll(int colNum) {
         String selectTableSQL = "SELECT * FROM PHONE;";
         ArrayList<ArrayList<String>> list = new ArrayList<>();
-        ArrayList<String> temp;
+        ArrayList<String> tempList;
 
         executeQuery(selectTableSQL);
         try {
             if (rs != null) {
                 while (rs.next()) {
-                    temp = new ArrayList<>();
-                    String id = rs.getString("ID");
-                    String phone = rs.getString("PHONE");
-                    String name = rs.getString("NAME");
-                    String email = rs.getString("EMAIL");
-                    String note = rs.getString("NOTE");
-                    temp.add(id);
-                    temp.add(phone);
-                    temp.add(name);
-                    temp.add(email);
-                    temp.add(note);
-                    list.add(temp);
+                    tempList = new ArrayList<>();
+                    for (int i = 1; i < colNum + 1; i++) {
+                        tempList.add(rs.getString(i));
+                    }
+                    list.add(tempList);
                 }
             }
         } catch (SQLException ex) {
@@ -142,50 +116,40 @@ public class DBHandler {
         return list;
     }
 
-    public void removeRow(String id) {
-        String removeRowSQL = "DELETE FROM PHONE "
-                + "WHERE ID = '" + id + "';";
-        execute(removeRowSQL);
+    protected void removeRow(String query) {
+        execute(query);
         disconnect();
     }
 
-    public void updateRow(String id, String phone, String name, String email, String note) {
-        String updateSQL = "UPDATE PHONE "
-                + "SET "
-                + "PHONE = '" + phone + "', "
-                + "NAME = '" + name + "', "
-                + "EMAIL = '" + email + "', "
-                + "NOTE = '" + note + "' "
-                + "WHERE ID = '" + id + "';";
-        execute(updateSQL);
+    protected void updateRow(String query) {
+        execute(query);
         disconnect();
     }
 
-    public boolean checkPhoneExists (String phone) {
-        String checkSQL = "SELECT * FROM PHONE "
-                + "WHERE PHONE = '" + phone + "';";
-        executeQuery(checkSQL);
+    protected boolean checkExists(String query, int id) {
+        executeQuery(query);
         try {
             if (rs != null){
-                if (rs.next()) {
-                    return true;  //exists
+                while (rs.next()) {
+                    if (rs.getInt(1) != id) {
+                        return true;  //exists
+                    }
                 }
+                return false;  //not exists
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
         disconnect();
-        return false; //not exists
+        return false;  //not exists
     }
 
-    public String getIdByPhone(String phone) {
-        String getIdSQL = "SELECT ID FROM PHONE "
-                + "WHERE PHONE = '" + phone + "';";
-        executeQuery(getIdSQL);
+    protected String getBy(String query, int index) {
+        executeQuery(query);
         try {
             if (rs != null){
                 if (rs.next()) {
-                    return rs.getString("ID");
+                    return rs.getString(index + 1);
                 }
             }
         } catch (SQLException ex) {

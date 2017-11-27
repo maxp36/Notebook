@@ -1,38 +1,48 @@
 package notebook.UI;
 
+import notebook.Contact;
 import notebook.Database.DBHandler;
+import notebook.NotebookController;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
 public class NotesTableModel extends AbstractTableModel {
 
-    private DBHandler handler;
+    private NotebookController controller;
 
-    private ArrayList<ArrayList<String>> notes;
+    private ArrayList<Contact> contacts;
 
-    public NotesTableModel() {
-        handler = DBHandler.getInstance();
+    public NotesTableModel(NotebookController controller) {
+        this.controller = controller;
         updateTable();
     }
 
     @Override
     public int getRowCount() {
-        return notes.size();
+        return contacts.size();
     }
 
     @Override
     public int getColumnCount() {
-        if (notes.isEmpty()) {
+        if (contacts.isEmpty()) {
             return 0;
         } else {
-            return notes.get(0).size();
+            return contacts.get(0).getNumCol();
         }
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        return notes.get(rowIndex).get(columnIndex);
+        Contact c = contacts.get(rowIndex);
+        switch (columnIndex) {
+            case 0 : return c.getId();
+            case 1 : return c.getPhone();
+            case 2 : return c.getName();
+            case 3 : return c.getEmail();
+            case 4 : return c.getNote();
+            default: return "";
+        }
     }
 
     @Override
@@ -47,12 +57,12 @@ public class NotesTableModel extends AbstractTableModel {
         }
     }
 
-    public String getIdByPhone(String phone) {
-        return handler.getIdByPhone(phone);
-    }
+    /*public String getIdByPhone(String phone) {
+        return controller.getIdByPhone(phone);
+    }*/
 
     public void updateTable() {
-        notes = handler.selectAll();
+        contacts = controller.getContacts();
         this.fireTableDataChanged();
     }
 }
